@@ -15,11 +15,9 @@ npm-debug.log*
 
 # Tracks quizPdf folder while keeping it empty
 quizPdf/*
-!quizPdf/
 !quizPdf/.gitkeep
 
 # Tracks quizHtml folder while keeping it empty
 quizHtml/*
-!quizHtml/
 !quizHtml/.gitkeep
 
