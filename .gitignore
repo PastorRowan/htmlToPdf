@@ -14,10 +14,9 @@ npm-debug.log*
 .vscode/
 
 # Tracks quizPdf folder while keeping it empty
-quizPdf/*
+quizPdf/*.pdf
 !quizPdf/.gitkeep
 
 # Tracks quizHtml folder while keeping it empty
-quizHtml/*
+quizHtml/*.html
 !quizHtml/.gitkeep
-
