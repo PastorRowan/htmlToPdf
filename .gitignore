@@ -1,0 +1,25 @@
+
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Optional REPL history
+.node_repl_history
+
+# IDE/editor folders and files
+.vscode/
+
+# Tracks quizPdf folder while keeping it empty
+quizPdf/*
+!quizPdf/
+!quizPdf/.gitkeep
+
+# Tracks quizHtml folder while keeping it empty
+quizHtml/*
+!quizHtml/
+!quizHtml/.gitkeep
+
