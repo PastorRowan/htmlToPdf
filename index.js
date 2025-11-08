@@ -7,7 +7,7 @@ const { PDFDocument } = require("pdf-lib");
 // PDF merging function
 async function mergePDFs(pdfPaths, outputFilename) {
     const mergedPdf = await PDFDocument.create();
-    
+
     for (const pdfPath of pdfPaths) {
         try {
             const pdfBytes = fs.readFileSync(pdfPath);
@@ -31,27 +31,11 @@ async function mergePDFs(pdfPaths, outputFilename) {
     const page = await browser.newPage();
 
     // Array of HTML files to combine
-    const htmlFiles = [
-        "1.html",
-        "2.html",
-        "3.html",
-        "4.html",
-        "5.html",
-        "6.html",
-        "7.html",
-        "8.html",
-        "9.html",
-        "10.html",
-        "11.html",
-        "12.html",
-        "13.html",
-        "14.html",
-        "15.html",
-        "16.html",
-        "17.html",
-        "18.html",
-        "19.html",
-    ];
+    const htmlFiles = [];
+
+    for (i = 1; i <= 25; i++) {
+        htmlFiles.push(`${i}.html`);
+    };
 
     const tempPdfPaths = [];
 
@@ -65,9 +49,21 @@ async function mergePDFs(pdfPaths, outputFilename) {
         // file:///C:/Users/rowan/Desktop/mat1503-2025-oct%20-html/1.html
         await page.goto(filePath, { waitUntil: "networkidle0" });
 
+        // This element will take up the entire page of the pdf
+        const focusElementId = "region-main";
+        const focusedElement = document.getElementById(focusElementId);
+
+        // Remove all elements except #region-main
+        await page.evaluate(() => {
+            if (focusedElement) {
+                document.body.innerHTML = "";
+                document.body.appendChild(focusedElement);
+            };
+        });
+
         await page.addStyleTag({
             content: `
-                #responseform {
+                #${focusElementId} {
                     width: 100vw !important;
                     height: 100vh !important;
                     position: fixed !important;
