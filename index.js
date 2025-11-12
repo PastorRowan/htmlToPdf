@@ -33,7 +33,7 @@ async function mergePDFs(pdfPaths, outputFilename) {
     // Array of HTML files to combine
     const htmlFiles = [];
 
-    for (i = 1; i <= 25; i++) {
+    for (let i = 1; i <= 14; i++) {
         htmlFiles.push(`${i}.html`);
     };
 
@@ -51,22 +51,22 @@ async function mergePDFs(pdfPaths, outputFilename) {
 
         // This element will take up the entire page of the pdf
         const focusElementId = "region-main";
-        const focusedElement = document.getElementById(focusElementId);
 
         // Remove all elements except #region-main
-        await page.evaluate(() => {
+        await page.evaluate((focusElementId) => {
+            const focusedElement = document.getElementById(focusElementId);
             if (focusedElement) {
                 document.body.innerHTML = "";
                 document.body.appendChild(focusedElement);
             };
-        });
+        }, focusElementId);
 
         await page.addStyleTag({
             content: `
                 #${focusElementId} {
                     width: 100vw !important;
-                    height: 100vh !important;
-                    position: fixed !important;
+                    height: auto !important;
+                    position: relative !important;
                     top: 0 !important;
                     left: 0 !important;
                     margin: 0 !important;
@@ -76,28 +76,56 @@ async function mergePDFs(pdfPaths, outputFilename) {
                     background: white !important;
                 }
                 body {
+                    height: auto !important;
                     margin: 0 !important;
                     padding: 0 !important;
-                    overflow: hidden !important;
+                    overflow: visible !important;
                     background: white !important;
                 }
                 html {
+                    height: auto !important;
                     margin: 0 !important;
                     padding: 0 !important;
-                    overflow: hidden !important;
+                    overflow: visible !important;
                 }
             `
         });
+
+        // Measure the body size in pixels
+        const pageSizePixels = await page.evaluate(() => {
+            const body = document.body;
+            const html = document.documentElement;
+
+            const width = Math.max(
+                body.scrollWidth, html.scrollWidth,
+                body.offsetWidth, html.offsetWidth,
+                body.clientWidth, html.clientWidth
+            );
+
+            const height = Math.max(
+                body.scrollHeight, html.scrollHeight,
+                body.offsetHeight, html.offsetHeight,
+                body.clientHeight, html.clientHeight
+            );
+
+            return { width, height };
+        });
+
+        const pageWidthPixels = pageSizePixels.width;
+        const pageHeightPixels = pageSizePixels.height;
 
         const htmlFileName = htmlFiles[i].split(".")[0];
         const pdfFileName = htmlFileName + ".pdf";
         const pdfFilePath = path.resolve(__dirname, "quizPdfs", pdfFileName);
 
+        console.log("pageHeightPixels: ", pageHeightPixels);
+
         await page.pdf({
             path: pdfFilePath,
-            format: "A4",
+            width: "1400px",
+            height: `${pageHeightPixels}px`,
             printBackground: true,
-            landscape: true,
+            landscape: false,
             margin: {
                 top: "0px",
                 right: "0px",
