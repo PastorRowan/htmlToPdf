@@ -20,3 +20,6 @@ quizPdfs/*.pdf
 # Tracks quizHtml folder while keeping it empty
 quizHtml/*.html
 !quizHtml/.gitkeep
+
+# combined final pdf
+combined_final
