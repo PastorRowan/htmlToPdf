@@ -4,47 +4,53 @@ const path = require("path");
 const fs = require("fs");
 const { PDFDocument } = require("pdf-lib");
 
-// PDF merging function
-async function mergePDFs(pdfPaths, outputFilename) {
-    const mergedPdf = await PDFDocument.create();
-
-    for (const pdfPath of pdfPaths) {
-        try {
-            const pdfBytes = fs.readFileSync(pdfPath);
-            const pdf = await PDFDocument.load(pdfBytes);
-            const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-            pages.forEach(page => mergedPdf.addPage(page));
-            console.log(`📄 Added: ${path.basename(pdfPath)}`);
-        } catch (error) {
-            console.error(`❌ Error merging ${pdfPath}:`, error.message);
-        };
-    };
-    
-    const mergedPdfBytes = await mergedPdf.save();
-    fs.writeFileSync(outputFilename, mergedPdfBytes);
-    console.log(`✅ Merged PDF saved as: ${outputFilename}`);
-
-};
-
-(async () => {
+(async function() {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
-    // Array of HTML files to combine
-    const htmlFiles = [];
+    const quizHtmlDir = path.resolve(__dirname, "quizHtml");
 
-    for (let i = 1; i <= 14; i++) {
-        htmlFiles.push(`${i}.html`);
+    if (!fs.existsSync(quizHtmlDir)) {
+        fs.mkdirSync(quizHtmlDir, { recursive: true });
     };
+
+    // Array of HTML files to combine
+    const htmlFilesUnsortedWithDuplicates = fs.readdirSync(quizHtmlDir);
+
+    const htmlFilesUnsorted = [ ... new Set(htmlFilesUnsortedWithDuplicates) ];
+
+    const numberOfPages = htmlFilesUnsorted.length;
+
+    const htmlFilesSorted = [];
+
+    console.log();
+    console.log("Collecting html files:\n");
+
+    for (let i = 1; i <= numberOfPages; i++) {
+
+        const htmlFile = htmlFilesUnsorted.find(
+            (fName) => {
+                return fName.includes(`(page ${i} of ${numberOfPages})`);
+            }
+        );
+
+        if (htmlFile) {
+            console.log(" ", htmlFile);
+            htmlFilesSorted.push(htmlFile);
+        };
+
+    };
+
+    console.log();
+    console.log("Creating pdfs:\n");
 
     const tempPdfPaths = [];
 
     // Load each HTML file and extract its body content
-    for (let i = 0; i < htmlFiles.length; i++) {
+    for (let i = 0; i < htmlFilesSorted.length; i++) {
 
-        const filePath = `file:///C:/projects/htmlToPdf/quizHtml/${htmlFiles[i]}`;
+        const filePath = `file:///C:/projects/htmlToPdf/quizHtml/${htmlFilesSorted[i]}`;
         // C:\projects\htmlToPdf
-        console.log("filePath: ", filePath);
 
         // file:///C:/Users/rowan/Desktop/mat1503-2025-oct%20-html/1.html
         await page.goto(filePath, { waitUntil: "networkidle0" });
@@ -114,11 +120,15 @@ async function mergePDFs(pdfPaths, outputFilename) {
         const pageWidthPixels = pageSizePixels.width;
         const pageHeightPixels = pageSizePixels.height;
 
-        const htmlFileName = htmlFiles[i].split(".")[0];
-        const pdfFileName = htmlFileName + ".pdf";
-        const pdfFilePath = path.resolve(__dirname, "quizPdfs", pdfFileName);
+        const quizPdfsDir = path.resolve(__dirname, "quizPdfs");
+        
+        if (!fs.existsSync(quizPdfsDir)) {
+            fs.mkdirSync(quizPdfsDir, { recursive: true });
+        };
 
-        console.log("pageHeightPixels: ", pageHeightPixels);
+        const htmlFileName = htmlFilesSorted[i].split(".")[0];
+        const pdfFileName = htmlFileName + ".pdf";
+        const pdfFilePath = path.resolve(quizPdfsDir, pdfFileName);
 
         await page.pdf({
             path: pdfFilePath,
@@ -139,17 +149,38 @@ async function mergePDFs(pdfPaths, outputFilename) {
         });
 
         tempPdfPaths.push(pdfFilePath);
-        console.log(`✅ Created: ${pdfFileName}`);
+        console.log(` ✅ Created: ${pdfFileName}`);
 
     };
 
     await browser.close();
 
+    console.log();
+
     // Merge all PDFs into one
     console.log("🔄 Merging PDFs...");
-    await mergePDFs(tempPdfPaths, "combined_final.pdf");
+
+    const finalPdfName = "combined_final.pdf";
+
+    const mergedPdf = await PDFDocument.create();
+
+    for (const pdfPath of tempPdfPaths) {
+        const pdfBytes = fs.readFileSync(pdfPath);
+        const pdf = await PDFDocument.load(pdfBytes);
+        const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
+        pages.forEach(page => mergedPdf.addPage(page));
+        console.log(` 📄 Added: ${path.basename(pdfPath)}`);
+    };
+    
+    const mergedPdfBytes = await mergedPdf.save();
+    fs.writeFileSync(finalPdfName, mergedPdfBytes);
+
+    console.log();
+
+    console.log(`✅ Merged PDF saved as: ${finalPdfName}`);
+
+    console.log();
 
     console.log("✅ Combined PDF created successfully!");
-    
 
 })();
