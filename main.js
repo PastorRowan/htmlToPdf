@@ -1,7 +1,8 @@
 
-const puppeteer = require("puppeteer");
 const path = require("path");
 const fs = require("fs");
+
+const puppeteer = require("puppeteer");
 const { PDFDocument } = require("pdf-lib");
 
 (async function() {
@@ -15,9 +16,13 @@ const { PDFDocument } = require("pdf-lib");
     };
 
     // Array of HTML files to combine
-    const htmlFilesUnsortedWithDuplicates = fs.readdirSync(quizHtmlDir);
+    const htmlFilesUnsorted = fs.readdirSync(quizHtmlDir);
 
-    const htmlFilesUnsorted = [ ... new Set(htmlFilesUnsortedWithDuplicates) ];
+    const gitKeepFileIndex = htmlFilesUnsorted.indexOf(".gitkeep");
+
+    if (gitKeepFileIndex !== -1) {
+        htmlFilesUnsorted.splice(gitKeepFileIndex, 1);
+    };
 
     const numberOfPages = htmlFilesUnsorted.length;
 

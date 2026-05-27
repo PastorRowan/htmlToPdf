@@ -23,3 +23,6 @@ quizHtml/*.html
 
 # combined final pdf
 combined_final.pdf
+
+# package-lock
+package-lock.json
